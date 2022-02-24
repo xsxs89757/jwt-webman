@@ -17,7 +17,7 @@ $user = [
     'name'  => 'lei.wang',
     'email' => '317448423@qq.com'
 ];
-$accessToken = JwtToken::generateToken($user);
+$accessToken = JwtToken::init()->generateToken($user);
 ```
 
 ##### 输出（json格式）
@@ -42,17 +42,17 @@ $accessToken = JwtToken::generateToken($user);
 ### 获取当前uid
 
 ```php
-$uid = JwtToken::getCurrentId();
+$uid = JwtToken::init()->getCurrentId();
 ```
 
 ### 获取其他自定义字段
 
 ```php
-$email = JwtToken::getExtendVal('email');
+$email = JwtToken::init()->getExtendVal('email');
 ```
 
 ### 刷新令牌
 
 ```php
-$accessToken = JwtToken::refreshToken();
+$accessToken = JwtToken::init()->refreshToken();
 ```
