@@ -6,6 +6,7 @@ namespace Qifen\Jwt;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
 use Qifen\Jwt\Exception\JwtTokenException;
 use Qifen\Jwt\Exception\JwtConfigException;
@@ -32,7 +33,7 @@ class JwtToken
      */
     public static function init(string $guard = 'default'): JwtToken
     {
-        $config = config('plugin.qifen.jwt.app.guard'.$guard);
+        $config = config('plugin.qifen.jwt.app.guard.'.$guard);
         if (empty($config)) {
             throw new JwtConfigException('jwt配置文件不存在');
         }
@@ -47,8 +48,8 @@ class JwtToken
      */
     public function getCurrentId(): int
     {
-        $id = config('plugin.qifen.jwt.app.extend_id');
-        return $this->getExtendVal($id ?? 'id') ?? 0;
+        $id = self::$_config['extend_id'];
+        return $this->getExtendVal($id ? $id : 'id') ?? 0;
     }
 
     /**
@@ -60,7 +61,7 @@ class JwtToken
      */
     public function getExtendVal(string $val)
     {
-        return self::getTokenExtend()[$val] ?? '';
+        return $this->getTokenExtend()[$val] ?? '';
     }
 
     /**
@@ -70,7 +71,7 @@ class JwtToken
      */
     public function getExtend(): array
     {
-        return self::getTokenExtend();
+        return $this->getTokenExtend();
     }
 
     /**
@@ -160,7 +161,7 @@ class JwtToken
      * @return array
      * @throws JwtTokenException
      */
-    private static function getTokenExtend(string $token = null, int $tokenType = self::ACCESS_TOKEN): array
+    private function getTokenExtend(string $token = null, int $tokenType = self::ACCESS_TOKEN): array
     {
         return (array) $this->verify($token, $tokenType)['extend'];
     }
@@ -205,11 +206,11 @@ class JwtToken
      */
     private static function verifyToken(string $token, int $tokenType): array
     {
-        $config = self::_getConfig();
+        $config = self::$_config;
         $secretKey = self::ACCESS_TOKEN == $tokenType ? self::getPublicKey($config['algorithms']) : self::getPublicKey($config['algorithms'], self::REFRESH_TOKEN);
         JWT::$leeway = 60;
 
-        return (array) JWT::decode($token, $secretKey, [$config['algorithms']]);
+        return (array) JWT::decode($token, new Key($secretKey,$config['algorithms']));
     }
 
     /**
@@ -257,7 +258,7 @@ class JwtToken
      */
     private static function getPublicKey(string $algorithm, int $tokenType = self::ACCESS_TOKEN): string
     {
-        $config = self::_getConfig();
+        $config = self::$_config;
         switch ($algorithm) {
             case 'HS256':
                 $key = self::ACCESS_TOKEN == $tokenType ? $config['access_secret_key'] : $config['refresh_secret_key'];
@@ -292,20 +293,5 @@ class JwtToken
         }
 
         return $key;
-    }
-
-    /**
-     * 获取配置文件
-     * @param $extend $config
-     * @return array
-     * @throws JwtConfigException
-     */
-    private static function _getConfig(): array
-    {
-        $config = config('plugin.qifen.jwt.app.guard');
-        if (empty($config)) {
-            throw new JwtConfigException('jwt配置文件不存在');
-        }
-        return $config;
     }
 }
