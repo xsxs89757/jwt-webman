@@ -81,9 +81,10 @@ class JwtToken
      *
      * @throws JwtTokenException
      */
-    public function refreshToken(string $token): array
+    public function refreshToken(string $token = null): array
     {
         $config = self::$_config;
+        $token = $token ?? self::getTokenFromHeaders();
         try {
             $tokenPayload = self::verifyToken($token, self::REFRESH_TOKEN);
         } catch (SignatureInvalidException $signatureInvalidException) {
