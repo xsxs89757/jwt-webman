@@ -81,9 +81,8 @@ class JwtToken
      *
      * @throws JwtTokenException
      */
-    public function refreshToken(): array
+    public function refreshToken(string $token): array
     {
-        $token = self::getTokenFromHeaders();
         $config = self::$_config;
         try {
             $tokenPayload = self::verifyToken($token, self::REFRESH_TOKEN);
